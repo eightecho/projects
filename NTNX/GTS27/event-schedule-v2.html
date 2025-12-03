@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Schedule - Corporate Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8edf2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #131313;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .schedule-wrapper {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .days-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #ffffff;
+            border-bottom: 2px solid #f0f1f3;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .day-tab {
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            background: white;
+        }
+
+        .day-tab:hover {
+            background: #f9fafb;
+        }
+
+        .day-tab.active {
+            border-bottom-color: #7855fa;
+            background: #fafaff;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7855fa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .day-date {
+            font-size: 18px;
+            font-weight: 700;
+            color: #131313;
+            margin-bottom: 2px;
+        }
+
+        .day-year {
+            font-size: 13px;
+            font-weight: 500;
+            color: #9ca3af;
+        }
+
+        .schedule-content {
+            padding: 50px 60px;
+        }
+
+        .day-schedule {
+            display: none;
+        }
+
+        .day-schedule.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .session-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .session-card:hover {
+            border-color: #7855fa;
+            box-shadow: 0 8px 24px rgba(120, 85, 250, 0.12);
+            transform: translateX(4px);
+        }
+
+        .session-time-badge {
+            background: linear-gradient(135deg, #7855fa 0%, #9d7ff5 100%);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            min-width: 160px;
+            text-align: center;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(120, 85, 250, 0.2);
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #131313;
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
+        }
+
+        .session-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .session-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .session-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 18px;
+            transition: all 0.25s ease;
+        }
+
+        .session-card:hover .session-arrow {
+            background: #7855fa;
+            color: white;
+            transform: translateX(2px);
+        }
+
+        /* Overlay and Slide Panel */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide-panel {
+            position: fixed;
+            top: 0;
+            right: -700px;
+            width: 700px;
+            height: 100%;
+            background: white;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-panel.active {
+            right: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #7855fa 0%, #9d7ff5 100%);
+            color: white;
+            padding: 40px 45px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .panel-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            padding-right: 60px;
+        }
+
+        .panel-time {
+            font-size: 18px;
+            font-weight: 600;
+            opacity: 0.95;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 45px;
+            flex: 1;
+        }
+
+        .detail-section {
+            margin-bottom: 35px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #7855fa;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .detail-content {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .detail-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .detail-list li {
+            padding: 14px 0;
+            color: #4b5563;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-bottom: 1px solid #f0f1f3;
+        }
+
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        .detail-list li:before {
+            content: "→";
+            color: #7855fa;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f3f4f6;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #131313;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .days-nav {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .slide-panel {
+                width: 600px;
+                right: -600px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .days-nav {
+                grid-template-columns: 1fr;
+            }
+
+            .schedule-content {
+                padding: 30px 20px;
+            }
+
+            .session-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .session-time-badge {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .slide-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .panel-header {
+                padding: 30px 25px;
+            }
+
+            .panel-title {
+                font-size: 26px;
+            }
+
+            .panel-body {
+                padding: 30px 25px;
+            }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Event Schedule</h1>
+            <p>April 6-9, 2026</p>
+        </div>
+
+        <div class="schedule-wrapper">
+            <div class="days-nav">
+                <div class="day-tab active" onclick="switchDay(0)">
+                    <div class="day-number">Day 0</div>
+                    <div class="day-date">April 6</div>
+                    <div class="day-year">2026</div>
+                </div>
+                <div class="day-tab" onclick="switchDay(1)">
+                    <div class="day-number">Day 1</div>
+                    <div class="day-date">April 7</div>
+                    <div class="day-year">2026</div>
+                </div>
+                <div class="day-tab" onclick="switchDay(2)">
+                    <div class="day-number">Day 2</div>
+                    <div class="day-date">April 8</div>
+                    <div class="day-year">2026</div>
+                </div>
+                <div class="day-tab" onclick="switchDay(3)">
+                    <div class="day-number">Day 3</div>
+                    <div class="day-date">April 9</div>
+                    <div class="day-year">2026</div>
+                </div>
+            </div>
+
+            <div class="schedule-content">
+                <!-- Day 0 -->
+                <div class="day-schedule active" id="day-0">
+                    <div class="session-card" onclick="openPanel('session1')">
+                        <div class="session-time-badge">12:00PM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session2')">
+                        <div class="session-time-badge">12:00PM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session3')">
+                        <div class="session-time-badge">12:00PM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session4')">
+                        <div class="session-time-badge">12:30PM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+                </div>
+
+                <!-- Day 1 -->
+                <div class="day-schedule" id="day-1">
+                    <div class="session-card" onclick="openPanel('session5')">
+                        <div class="session-time-badge">7:00AM - 7:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session6')">
+                        <div class="session-time-badge">8:00AM - 10:00AM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session7')">
+                        <div class="session-time-badge">8:00AM - 5:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session8')">
+                        <div class="session-time-badge">8:00AM - 5:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session9')">
+                        <div class="session-time-badge">8:00AM - 5:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session10')">
+                        <div class="session-time-badge">8:00AM - 7:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session11')">
+                        <div class="session-time-badge">9:00AM - 10:15AM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session12')">
+                        <div class="session-time-badge">10:00AM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session13')">
+                        <div class="session-time-badge">11:45AM - 1:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session14')">
+                        <div class="session-time-badge">1:30PM - 3:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session15')">
+                        <div class="session-time-badge">5:00PM - 7:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="day-schedule" id="day-2">
+                    <div class="session-card" onclick="openPanel('session16')">
+                        <div class="session-time-badge">7:30AM - 7:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session17')">
+                        <div class="session-time-badge">8:00AM - 9:00AM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session18')">
+                        <div class="session-time-badge">8:00AM - 4:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session19')">
+                        <div class="session-time-badge">8:00AM - 4:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session20')">
+                        <div class="session-time-badge">8:00AM - 4:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session21')">
+                        <div class="session-time-badge">8:00AM - 5:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session22')">
+                        <div class="session-time-badge">9:00AM - 4:30PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session23')">
+                        <div class="session-time-badge">10:15AM - 11:30AM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session24')">
+                        <div class="session-time-badge">11:30AM - 1:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session25')">
+                        <div class="session-time-badge">5:00PM - 6:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session26')">
+                        <div class="session-time-badge">6:00PM - 9:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="day-schedule" id="day-3">
+                    <div class="session-card" onclick="openPanel('session27')">
+                        <div class="session-time-badge">8:00AM - 12:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session28')">
+                        <div class="session-time-badge">8:00AM - 9:00AM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session29')">
+                        <div class="session-time-badge">8:00AM - 12:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session30')">
+                        <div class="session-time-badge">8:00AM - 12:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session31')">
+                        <div class="session-time-badge">8:00AM - 2:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session32')">
+                        <div class="session-time-badge">8:00AM - 2:00PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session33')">
+                        <div class="session-time-badge">9:15AM - 2:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+
+                    <div class="session-card" onclick="openPanel('session34')">
+                        <div class="session-time-badge">12:00PM - 1:15PM</div>
+                        <div class="session-info">
+                            <div class="session-title">Session Title</div>
+                            <div class="session-meta">
+                                <span>📍 Location Name</span>
+                            </div>
+                        </div>
+                        <div class="session-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+    <!-- Slide Panel -->
+    <div class="slide-panel" id="slidePanel">
+        <div class="panel-header">
+            <button class="close-btn" onclick="closePanel()">×</button>
+            <div class="panel-title" id="panelTitle">Session Title</div>
+            <div class="panel-time" id="panelTime">
+                <span>🕐</span>
+                <span>12:00PM - 5:00PM</span>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="detail-section">
+                <div class="detail-label">Location</div>
+                <div class="location-badge">
+                    <span>📍</span>
+                    <span>Location Name - Level X</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-label">Description</div>
+                <div class="detail-content">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-label">What to Expect</div>
+                <ul class="detail-list">
+                    <li>Placeholder detail item one</li>
+                    <li>Placeholder detail item two</li>
+                    <li>Placeholder detail item three</li>
+                    <li>Placeholder detail item four</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchDay(dayIndex) {
+            // Update tabs
+            const tabs = document.querySelectorAll('.day-tab');
+            tabs.forEach((tab, index) => {
+                tab.classList.toggle('active', index === dayIndex);
+            });
+
+            // Update content
+            const schedules = document.querySelectorAll('.day-schedule');
+            schedules.forEach((schedule, index) => {
+                schedule.classList.toggle('active', index === dayIndex);
+            });
+        }
+
+        function openPanel(sessionId) {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('slidePanel').classList.add('active');
+        }
+
+        function closePanel() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('slidePanel').classList.remove('active');
+        }
+
+        // Close panel with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePanel();
+            }
+        });
+    </script>
+</body>
+</html>
