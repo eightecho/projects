@@ -149,6 +149,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .region-tab.active {
